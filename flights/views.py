@@ -1,6 +1,6 @@
 import re
-from django.shortcuts import render
-from .models import Flight
+from django.shortcuts import render, redirect
+from .models import Flight, Passenger
 
 # Create your views here.
 def index(request):
@@ -17,5 +17,13 @@ def flight(request, flight_id):
         raise Http404("flight not found")
     return render(request, "flights/flight.html", {
         "flight": f,
+        "non_passengers": Passenger.objects.exclude(flights=f).all(),
         "passengers": f.passengers.all()
     })
+
+def book(request, flight_id):
+    if request.method == "POST":
+        p = Passenger.objects.get(pk=request.POST["passenger"])
+        flight = Flight.objects.get(pk=flight_id)
+        p.flights.add(flight)
+        return redirect("flight", flight_id=flight_id)
